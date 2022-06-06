@@ -1,0 +1,992 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>Materiais Compósitos</title>
+<script>
+MathJax = {
+  tex: {
+    inlineMath: [['$','$'], ['\\(','\\)']],
+    tags: 'all'
+  }
+};
+</script>
+<script type="text/javascript" async 
+src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js">
+</script>
+
+<style>
+body > * {
+  max-width: 42em;
+}
+body {
+  font-family: "Roboto Condensed", sans-serif;
+  padding-left: 7.5em;
+  padding-right: 7.5em;
+}
+pre, code {
+  max-width: 50em;
+  font-family: monospace;
+}
+pre.oct-code {
+  border: 1px solid Grey;
+  padding: 5px;
+}
+pre.oct-code-output {
+  margin-left: 2em;
+}
+span.comment {
+  color: ForestGreen;
+}
+span.keyword {
+  color: Blue;
+}
+span.string {
+  color: DarkOrchid;
+}
+footer {
+  margin-top: 2em;
+  font-size: 80%;
+}
+a, a:visited {
+  color: Blue;
+}
+h2 {
+  font-family: "Roboto Condensed", serif;
+  margin-top: 1.5em;
+}
+h2 a, h2 a:visited {
+  color: Black;
+}
+</style>
+
+</head>
+<body>
+<h1>Materiais Compósitos</h1>
+
+<p><b>Disciplina:</b> Materiais Compósitos</p>
+
+<p><b>Professor:</b> Dr. Jean Rodrigues (IFPA)</p>
+
+<p><b>Curso:</b> Programa de Pós Graduação em Engenharia de Materiais (PPGMAT)</p>
+
+<p>Exercício proposto por Marinucci (2011).</p>
+
+<p><a href="https://www.octave.org">Acesse o link para <b>GNU Octave</b></a>.</p>
+
+<h2>Contents</h2>
+<ul>
+<li><a href="#node1">Lista de Exercícios</a></li>
+<li><a href="#node2">Declaração de dados de entrada no octave</a></li>
+<li><a href="#node3">Critério de falha em compósitos:</a></li>
+<li><a href="#node4">Referências Bibliográficas</a></li>
+<li><a href="#node5">Publicando este arquivo em página web (html).</a></li>
+</ul>
+<h2><a id="node1">Lista de Exercícios</a></h2>
+<p>Considere um compósito plano de fibra de vidro e matriz de resina epóxi, com
+fração volumétrica de 45% de fibra, carregado como mostrado abaixo. A
+configuração do laminado é dada como sendo [+45°/0°/90°]t e admite-se a
+espessura de cada camada como sendo de 0,2 mm. Considerando as propriedades
+dadas abaixo, determinar:</p>
+
+<ol>
+<li>as equações constitutivas do laminado;</li>
+<li>as deformações centrais e curvaturas da placa;</li>
+<li>as deformações em cada camada nas direções globais (X-Y) e direções principais (1-2);</li>
+<li>as tensões em cada camada nas direções globais (X-Y) e direções principais (1-2);</li>
+<li>a possível ocorrência de falha usando o critério de tensão máxima e o critério de Azzi-Tsai-Hill.</li>
+</ol>
+<h2><a id="node2">Declaração de dados de entrada no octave</a></h2>
+<p><i>E1 é o módulo de elasticidade da fibra na direção 1, unidade em GPa.</i></p>
+
+<p><i>E2 é o módulo de elasticidade da fibra na direção 2, unidade em GPa.</i></p>
+
+<p><i>G12 é o módulo de cisalhamento, unidade em GPa.</i></p>
+
+<p><i>v12 é o Coeficiente de Poisson maior, unidade admimensional.</i></p>
+
+<p><i>Xt é a resistência à tração longitudinal da lâmina unidade em GPa.</i></p>
+
+<p><i>Xc é a resistência à compressão longitudinal da lâmina, unidade em GPa.</i></p>
+
+<p><i>Yt é a resistência à tração transversal da lâmina, unidade em GPa.</i></p>
+
+<p><i>Yc é a resistência à compressão transversal da lâmina, unidade em GPa.</i></p>
+
+<p><i>S12 é a resistência ao cisalhamento no plano da lâmina, unidade em GPa.</i></p>
+
+<p>Primeiramente, iremos declarar os nossos dados de entrada:</p>
+
+<p>Dados de entrada:</p>
+
+<pre class="oct-code"><span class="comment">#Dados de entrada</span>
+E1 = 39;  <span class="comment">#GPa</span>
+E2 = 8.3; <span class="comment">#GPa</span>
+G12 = 4.1;  <span class="comment">#GPa</span>
+v12 = 0.26;
+Xt = 1.062; <span class="comment">#GPa</span>
+Xc = 0.958;  <span class="comment">#GPa</span>
+Yt = 0.031; <span class="comment">#GPa</span>
+Yc = 0.118; <span class="comment">#GPa</span>
+S12 = 0.078;  <span class="comment">#GPa</span>
+</pre>
+
+<p>Declarando as curvaturas em razão da cota Z:</p>
+
+<pre class="oct-code">z_k0 = -0.0003; <span class="comment">#N/m</span>
+z_k1 = -0.0001; <span class="comment">#N/m</span>
+z_k2 = 0.0001; <span class="comment">#N/m</span>
+z_k3 = 0.0003; <span class="comment">#N/m</span>
+</pre>
+
+<p>Os valores em milímetros (mm) foram convertidos para a unidade padrão metro(m).</p>
+
+<p>Os valores em Mega Pascal (MPa) foram convertidos para a unidade padrão Giga Pascal (GPa).</p>
+
+<p>Vamos declarar também os nossos dados de carregamento</p>
+
+<pre class="oct-code"><span class="comment">#Carregamento</span>
+Nx = 200000;   <span class="comment">#N/m</span>
+Ny = 100000;   <span class="comment">#N/m</span>
+Nxy = 0;       <span class="comment">#m/m</span>
+</pre>
+
+<p>A unidade padrão é Newton por Metro (N/m), sendo:</p>
+
+<p>$Nx$ a Força normal na direção X;</p>
+
+<p>$Ny$ a Força normal na direção Y.</p>
+
+<p>Cálculo do coeficiente de Poisson Menor (v21)</p>
+
+<pre class="oct-code"><span class="comment">#Calculo o coeficiente de Poisson Menor (v21)</span>
+v21 = v12*E2/E1;</pre>
+
+<p>Iremos Calcular as matrizes [Q] e [S] da lâmina considerando as fibras
+alinhadas ao eixo longitudinal da lâmina (teta = 0, x=1)</p>
+
+<pre class="oct-code"><span class="comment">#Calculo dos elementos da matriz rigidez de laminas ortotropicas - (GPa)</span>
+Q11 = (E1/(1-(v12*v21)));
+Q12 = (v21*E1)/(1-(v21*v12));
+Q21 = (v12*E2)/(1-(v12*v21));
+Q22 = (E2)/(1-(v21*v12));
+Q66 = G12;</pre>
+
+<p>Cálculo dos elementos da matriz de flexibilidade de lâminas ortotropicas - (GPa)^-1:</p>
+
+<pre class="oct-code">S11 = (1/E1);
+S12 = (-v21)/(E2);
+S21 = (-v12)/(E1);
+S22 = (1)/(E2);
+S66 = (1)/(G12);</pre>
+
+<p>Matriz de Rigidez de lâminas Ortotropicas em EPT - (GPa):</p>
+
+<pre class="oct-code">Q = [Q11, Q12, 0; Q21, Q22, 0; 0, 0, Q66];</pre>
+
+<p>Matriz de Flexibilidade de lâminas Ortotropicas em EPT - (GPa)^-1:</p>
+
+<p>Lembrar que a matriz [S] também pode ser calculada por "S = INV(Q)"</p>
+
+<pre class="oct-code">S = [S11, S12, 0; S21, S22, 0; 0, 0, S66];</pre>
+
+<p>Calculando as matrizes de Rigidez [Q_barra] e Flexibilidade [S_barra] considerando qua as
+fibras ao longo da direçao 1 estão orientadas a +45º em relaçao a direçao x:</p>
+
+<p>Calculo dos elementos da matriz de Rotaçao (T) p/ camada de 45º:</p>
+
+<pre class="oct-code">teta_1 = 45;
+T11_45 = cosd(teta_1)^2;
+T12_45 = sind(teta_1)^2;
+T16_45 = 2*cosd(teta_1)*sind(teta_1);
+T21_45 = sind(teta_1)^2;
+T22_45 = cosd(teta_1)^2;
+T26_45 = -2*cosd(teta_1)*sind(teta_1);
+T61_45 = -cosd(teta_1)*sind(teta_1);
+T62_45 = cosd(teta_1)*sind(teta_1);
+T66_45 = (cosd(teta_1)^2) - (sind(teta_1)^2);</pre>
+
+<p>Cálculo dos elementos da matriz de Rotaçao (T) p/ camada de 0º:</p>
+
+<pre class="oct-code">teta_2 = 0;
+T11_0 = cosd(teta_2)^2;
+T12_0 = sind(teta_2)^2;
+T16_0 = 2*cosd(teta_2)*sind(teta_2);
+T21_0 = sind(teta_2)^2;
+T22_0 = cosd(teta_2)^2;
+T26_0 = -2*cosd(teta_2)*sind(teta_2);
+T61_0 = -cosd(teta_2)*sind(teta_2);
+T62_0 = cosd(teta_2)*sind(teta_2);
+T66_0 = (cosd(teta_2)^2) - (sind(teta_2)^2);</pre>
+
+<p>Cálculo dos elementos da matriz de Rotaçao (T) p/ camada de 90º:</p>
+
+<pre class="oct-code">teta_3 = 90;
+T11_90 = cosd(teta_3)^2;
+T12_90 = sind(teta_3)^2;
+T16_90 = 2*cosd(teta_3)*sind(teta_3);
+T21_90 = sind(teta_3)^2;
+T22_90 = cosd(teta_3)^2;
+T26_90 = -2*cosd(teta_3)*sind(teta_3);
+T61_90 = -cosd(teta_3)*sind(teta_3);
+T62_90 = cosd(teta_3)*sind(teta_3);
+T66_90 = (cosd(teta_3)^2) - (sind(teta_3)^2);</pre>
+
+<p>Matriz de Rotação [T] para o ângulo de 45º:</p>
+
+<pre class="oct-code">T_45 = [T11_45, T12_45, T16_45; T21_45, T22_45, T26_45; T61_45, T62_45, T66_45];</pre>
+
+<p>Matriz de Rotação [T] para o ângulo de 0º:</p>
+
+<pre class="oct-code">T_0 = [T11_0, T12_0, T16_0; T21_0, T22_0, T26_0; T61_0, T62_0, T66_0];</pre>
+
+<p>Matriz de Rotação [T] para o ângulo de 90º:</p>
+
+<pre class="oct-code">T_90 = [T11_90, T12_90, T16_90; T21_90, T22_90, T26_90; T61_90, T62_90, T66_90];</pre>
+
+<p>Inversa da Matriz de Rotação [T] para o ângulo de 45º:</p>
+
+<pre class="oct-code">T_45_i = inv(T_45);</pre>
+
+<p>Inversa da Matriz de Rotação [T] para o ângulo de 0º:</p>
+
+<pre class="oct-code">T_0_i = inv(T_0);</pre>
+
+<p>Inversa da Matriz de Rotação [T] para o ãngulo de 90º:</p>
+
+<pre class="oct-code">T_90_i = inv(T_90);</pre>
+
+<p>Transposta da Matriz de Rotação [T] para o ângulo de 45º:</p>
+
+<pre class="oct-code">T_45_t = T_45<span class="string">';</span></pre>
+
+<p>Transposta da Matriz de Rotação [T] para o ângulo de 0º:</p>
+
+<pre class="oct-code">T_0_t = T_0<span class="string">';</span></pre>
+
+<p>Transposta da Matriz de Rotação [T] para o ângulo de 90º:</p>
+
+<pre class="oct-code">T_90_t = T_90<span class="string">';</span></pre>
+
+<p>Inversa da Matriz Transposta da Matriz de Rotação [T] para o ângulo de 45º:</p>
+
+<pre class="oct-code">T_45_i_t = inv(T_45_t);</pre>
+
+<p>Inversa da Matriz Transposta da Matriz de Rotação [T] para o ângulo de 0º:</p>
+
+<pre class="oct-code">T_0_i_t = inv(T_0_t);</pre>
+
+<p>Inversa da Matriz Transposta da Matriz de Rotaçao [T] para o ângulo de 90º:</p>
+
+<pre class="oct-code">T_90_i_t = inv(T_90_t);</pre>
+
+<p>Cálculo da Matriz de Rigidez de uma lâmina Ortotropica angular 45º [Q_barra] - (GPa):</p>
+
+<pre class="oct-code">Q_barra_45 = T_45_i*Q*T_45_i_t;</pre>
+
+<p>Cálculo da Matriz de Rigidez de uma lâmina Ortotropica angular 0º [Q_barra] - (GPa):</p>
+
+<pre class="oct-code">Q_barra_0 = T_0_i*Q*T_0_i_t;</pre>
+
+<p>Cálculo da Matriz de Rigidez de uma lâmina Ortotropica angular 90º [Q_barra] - (GPa):</p>
+
+<pre class="oct-code">Q_barra_90 = T_90_i*Q*T_90_i_t;</pre>
+
+<p>Cálculo da Matriz de Flexibilidade de uma lâmina Ortotropica angular 45º [S_barra] - (GPa)^-1:</p>
+
+<pre class="oct-code">S_barra_45 = T_45_t*S*T_45;</pre>
+
+<p>Cálculo da Matriz de Flexibilidade de uma lâmina Ortotropica angular 0º [S_barra] - (GPa)^-1:</p>
+
+<pre class="oct-code">S_barra_0 = T_0_t*S*T_0;</pre>
+
+<p>Cálculo da Matriz de Flexibilidade de uma lâmina Ortotropica angular 90º [S_barra] - (GPa)^-1:</p>
+
+<pre class="oct-code">S_barra_90 = T_90_t*S*T_90;</pre>
+
+<p>Elementos da Matriz de Rigidez Extensional no Plano:</p>
+
+<pre class="oct-code">A1 = Q_barra_45*(z_k1 - z_k0);
+A2 = Q_barra_0*(z_k2 - z_k1);
+A3 = Q_barra_90*(z_k3 - z_k2);</pre>
+
+<p>Matriz de Rigidez Extensional no Plano, unidade de medida é newton/metro:</p>
+
+<pre class="oct-code">A = (A1+A2+A3)*10^9;</pre>
+
+<p>Elementos da Matriz de Acoplamento Extensão-Deformação:</p>
+
+<pre class="oct-code">B1 = Q_barra_45*(z_k1^2 - z_k0^2);
+B2 = Q_barra_0*(z_k2^2 - z_k1^2);
+B3 = Q_barra_90*(z_k3^2 - z_k2^2);</pre>
+
+<p>Matriz de Acoplamento Extensão-Deformação:</p>
+
+<pre class="oct-code">B = 0.5*(B1+B2+B3)*10^9;</pre>
+
+<p>Elementos da Matriz de Rigidez à Flexão e Torsão:</p>
+
+<pre class="oct-code">D1 = Q_barra_45*(z_k1^3 - z_k0^3);
+D2 = Q_barra_0*(z_k2^3 - z_k1^3);
+D3 = Q_barra_90*(z_k3^3 - z_k2^3);</pre>
+
+<p>Matriz de Rigidez à Flexão e Torsão:</p>
+
+<pre class="oct-code">D = (1/3)*(D1+D2+D3)*10^9;</pre>
+
+<p>Cálculo da Matriz [ABBD]:</p>
+
+<pre class="oct-code">ABBD = [A, B; B, D];</pre>
+
+<p>Cálculo da matriz [abcd]</p>
+
+<p>Inversão parcial da matriz [ABBD]</p>
+
+<pre class="oct-code">A_ast = inv(A);
+B_ast = -inv(A)*B;
+C_ast = -B_ast<span class="string">';</span>
+D_ast = D+B*B_ast;</pre>
+
+<p>Inversão total da matriz [ABBD]</p>
+
+<pre class="oct-code">a = A_ast+B_ast*inv(D_ast)*B_ast<span class="string">';</span>
+b = B_ast*inv(D_ast);
+c = b<span class="string">';</span>
+d = inv(D_ast);</pre>
+
+<p>Cálculo das deform ações normais no plano médio (m/m):</p>
+
+<pre class="oct-code">e_zero = a*[Nx; Ny; Nxy];</pre>
+
+<p>Cálculo das curvaturas (1/m)</p>
+
+<pre class="oct-code">K = c*[Nx; Ny; Nxy];</pre>
+
+<p>Cálculo das deformações globais no ponto médio da camada 1 (m/m):</p>
+
+<pre class="oct-code">z_m_k1 = -0.0002; <span class="comment"># (m/m)</span>
+e_x_k1 = e_zero + z_m_k1*K;</pre>
+
+<p>Cálculo das deformações globais no ponto médio da camada 2 (m/m):</p>
+
+<pre class="oct-code">z_m_k2 = 0; <span class="comment"># (m/m)</span>
+e_x_k2 = e_zero + z_m_k2*K;</pre>
+
+<p>Cálculo das deformações globais no ponto médio da camada 2 (m/m):</p>
+
+<pre class="oct-code">z_m_k3 = 0.0002; <span class="comment"># (m/m)</span>
+e_x_k3 = e_zero + z_m_k3*K;</pre>
+
+<p>Calculo das deformações locais no ponto médio da camada k = 1</p>
+
+<pre class="oct-code">e_1 = T_45_i_t*e_x_k1;</pre>
+
+<p>Cálculo das deformações locais no ponto médio da camada k = 2</p>
+
+<pre class="oct-code">e_2 = T_0_i_t*e_x_k2;</pre>
+
+<p>Cálculo das deformações locais no ponto médio da camada k = 3</p>
+
+<pre class="oct-code">e_3 = T_90_i_t*e_x_k3;</pre>
+
+<p>Cálculo das tensões globais no ponto médio da camada k = 1 (GPa)</p>
+
+<pre class="oct-code">T_x_1 = Q_barra_45*e_zero +Q_barra_45*z_m_k1*K;</pre>
+
+<p>Cálculo das tensões globais no ponto médio da camada k = 2 (GPa)</p>
+
+<pre class="oct-code">T_x_2 = Q_barra_0*e_zero +Q_barra_0*z_m_k2*K;</pre>
+
+<p>Cálculo das tensões globais no ponto médio da camada k = 3 (GPa)</p>
+
+<pre class="oct-code">T_x_3 = Q_barra_90*e_zero +Q_barra_90*z_m_k3*K;</pre>
+
+<p>Cálculo das tensões locais no ponto médio da camada k = 1 (GPa)</p>
+
+<pre class="oct-code">T_1_k1 = T_45*T_x_1;</pre>
+
+<p>Cálculo das tensões locais no ponto médio da camada k = 2 (GPa)</p>
+
+<pre class="oct-code">T_1_k2 = T_0*T_x_2;</pre>
+
+<p>Cálculo das tensões locais no ponto médio da camada k = 3 (GPa)</p>
+
+<pre class="oct-code">T_1_k3 = T_90*T_x_3;</pre>
+<h2><a id="node3">Critério de falha em compósitos:</a></h2>
+<ul>
+<li>Critério de tensão máxima</li>
+</ul>
+
+<p>Para a lamina 45º k1</p>
+
+<pre class="oct-code"><span class="keyword">if</span> (T_1_k1(1,1) &lt; Xt)
+       printf (<span class="string">"Lâmina de 45º na direção 1 não falha."</span>)
+     <span class="keyword">else</span>
+       printf (<span class="string">"Lâmina de 45º na direção 1 falha."</span>)
+     <span class="keyword">endif</span></pre>
+
+<pre class="oct-code-output">Lâmina de 45º na direção 1 não falha.</pre>
+
+<p>Para a lamina 45º k1</p>
+
+<pre class="oct-code"><span class="keyword">if</span> (T_1_k1(2 ,1) &lt; Yt)
+       printf (<span class="string">"Lâmina de 45º na direção 2 não falha."</span>)
+     <span class="keyword">else</span>
+       printf (<span class="string">"Lâmina de 45º na direção 2 falha."</span>)
+     <span class="keyword">endif</span></pre>
+
+<pre class="oct-code-output">Lâmina de 45º na direção 2 falha.</pre>
+
+<p>Para a lamina 45º k1</p>
+
+<pre class="oct-code"><span class="keyword">if</span> (abs (T_1_k1(3,1)) &lt; abs(S12))
+       printf (<span class="string">"Lâmina de 45º na direção 12 não falha."</span>)
+     <span class="keyword">else</span>
+       printf (<span class="string">"Lâmina de 45º na direção 12 falha."</span>)
+     <span class="keyword">endif</span></pre>
+
+<pre class="oct-code-output">Lâmina de 45º na direção 12 não falha.</pre>
+
+<p>Para a lamina 0º k2</p>
+
+<pre class="oct-code"><span class="keyword">if</span> (T_1_k2(1,1) &lt; Xt)
+       printf (<span class="string">"Lâmina de 0º na direção 1 não falha."</span>)
+     <span class="keyword">else</span>
+       printf (<span class="string">"Lâmina de 0º na direção 1 falha."</span>)
+     <span class="keyword">endif</span></pre>
+
+<pre class="oct-code-output">Lâmina de 0º na direção 1 não falha.</pre>
+
+<p>Para a lamina 0º k2</p>
+
+<pre class="oct-code"><span class="keyword">if</span> (T_1_k2(2 ,1) &lt; Yt)
+       printf (<span class="string">"Lâmina de 0º na direção 2 não falha."</span>)
+     <span class="keyword">else</span>
+       printf (<span class="string">"Lâmina de 0º na direção 2 falha."</span>)
+     <span class="keyword">endif</span></pre>
+
+<pre class="oct-code-output">Lâmina de 0º na direção 2 falha.</pre>
+
+<p>Para a lamina 0º k2</p>
+
+<pre class="oct-code"><span class="keyword">if</span> (abs (T_1_k2(3,1)) &lt; abs(S12))
+       printf (<span class="string">"Lâmina de 0º na direção 12 não falha."</span>)
+     <span class="keyword">else</span>
+       printf (<span class="string">"Lâmina de 0º na direção 12 falha."</span>)
+     <span class="keyword">endif</span></pre>
+
+<pre class="oct-code-output">Lâmina de 0º na direção 12 falha.</pre>
+
+<p>Para a lamina 90º k3</p>
+
+<pre class="oct-code"><span class="keyword">if</span> (T_1_k3(1,1) &lt; Xt)
+       printf (<span class="string">"Lâmina de 90º na direção 1 não falha."</span>)
+     <span class="keyword">else</span>
+       printf (<span class="string">"Lâmina de 90º na direção 1 falha."</span>)
+     <span class="keyword">endif</span></pre>
+
+<pre class="oct-code-output">Lâmina de 90º na direção 1 não falha.</pre>
+
+<p>Para a lamina 90º k3</p>
+
+<pre class="oct-code"><span class="keyword">if</span> (T_1_k3(2 ,1) &lt; Yt)
+       printf (<span class="string">"Lâmina de 90º na direção 2 não falha."</span>)
+     <span class="keyword">else</span>
+       printf (<span class="string">"Lâmina de 90º na direção 2 falha."</span>)
+     <span class="keyword">endif</span></pre>
+
+<pre class="oct-code-output">Lâmina de 90º na direção 2 falha.</pre>
+
+<p>Para a lamina 90º k3</p>
+
+<pre class="oct-code"><span class="keyword">if</span> (abs (T_1_k3(3,1)) &lt; abs(S12))
+       printf (<span class="string">"Lâmina de 90º na direção 12 não falha."</span>)
+     <span class="keyword">else</span>
+       printf (<span class="string">"Lâmina de 90º na direção 12 falha."</span>)
+     <span class="keyword">endif</span></pre>
+
+<pre class="oct-code-output">Lâmina de 90º na direção 12 falha.</pre>
+
+<ul>
+<li>Critério de AZZI-TSAI-HILL (máximo trabalho).</li>
+</ul>
+
+<pre class="oct-code"><span class="keyword">if</span> ((T_1_k1(1,1)/Xt)^2 - T_1_k1(1,1)*T_1_k1(2,1)/Xt^2 + (T_1_k1(2,1)/Yt^2) + (T_1_k1(3,1)/S12)^2 &lt; 1)
+         printf (<span class="string">"Compósito não falha."</span>)
+     <span class="keyword">else</span>
+       printf (<span class="string">"Compósito falha."</span>)
+     <span class="keyword">endif</span></pre>
+
+<pre class="oct-code-output">Compósito falha.</pre>
+<h2><a id="node4">Referências Bibliográficas</a></h2>
+<ol>
+<li>MARINUCCI, Gerson. Materiais compósitos poliméricos: fundamentos e tecnologia.
+São Paulo: Artliber, v. 1, 2011.</li>
+<li>John W. Eaton, David Bateman, Soren Hauberg, Rik Wehbring (2022).
+GNU Octave version 7.1.0 manual: a high-level interactive language for
+numerical computations.
+URL https://www.gnu.org/software/octave/doc/v7.1.0/</li>
+</ol>
+<h2><a id="node5">Publicando este arquivo em página web (html).</a></h2>
+<pre class="oct-code">publish (<span class="string">"exercicio.m"</span>);
+grabcode (<span class="string">"html/exercicio.html"</span>);</pre>
+
+<pre class="oct-code-output">error: get: invalid handle (= -43.1215)
+	in:
+
+publish ("exercicio.m");
+grabcode ("html/exercicio.html");</pre>
+
+<footer>
+<hr>
+<a href="https://www.octave.org">Published with GNU Octave 7.1.0</a>
+</footer>
+<!--
+##### SOURCE BEGIN #####
+## Materiais Compósitos
+#
+# *Disciplina:* Materiais Compósitos
+#
+# *Professor:* Dr. Jean Rodrigues (IFPA)
+#
+# *Curso:* Programa de Pós Graduação em Engenharia de Materiais (PPGMAT)
+#
+# Exercício proposto por Marinucci (2011).
+#
+# <https://www.octave.org Acesse o link para *GNU Octave*>.
+#
+## Lista de Exercícios
+#
+# Considere um compósito plano de fibra de vidro e matriz de resina epóxi, com
+# fração volumétrica de 45% de fibra, carregado como mostrado abaixo. A
+# configuração do laminado é dada como sendo [+45°/0°/90°]t e admite-se a
+# espessura de cada camada como sendo de 0,2 mm. Considerando as propriedades
+# dadas abaixo, determinar:
+#
+% # as equações constitutivas do laminado;
+% # as deformações centrais e curvaturas da placa;
+% # as deformações em cada camada nas direções globais (X-Y) e direções principais (1-2);
+% # as tensões em cada camada nas direções globais (X-Y) e direções principais (1-2);
+% # a possível ocorrência de falha usando o critério de tensão máxima e o critério de Azzi-Tsai-Hill.
+#
+## Declaração de dados de entrada no octave
+#
+# _E1 é o módulo de elasticidade da fibra na direção 1, unidade em GPa._
+#
+# _E2 é o módulo de elasticidade da fibra na direção 2, unidade em GPa._
+#
+# _G12 é o módulo de cisalhamento, unidade em GPa._
+#
+# _v12 é o Coeficiente de Poisson maior, unidade admimensional._
+#
+# _Xt é a resistência à tração longitudinal da lâmina unidade em GPa._
+#
+# _Xc é a resistência à compressão longitudinal da lâmina, unidade em GPa._
+#
+# _Yt é a resistência à tração transversal da lâmina, unidade em GPa._
+#
+# _Yc é a resistência à compressão transversal da lâmina, unidade em GPa._
+#
+# _S12 é a resistência ao cisalhamento no plano da lâmina, unidade em GPa._
+#
+# Primeiramente, iremos declarar os nossos dados de entrada:
+#
+# Dados de entrada:
+
+#Dados de entrada
+E1 = 39;  #GPa
+E2 = 8.3; #GPa
+G12 = 4.1;  #GPa
+v12 = 0.26;
+Xt = 1.062; #GPa
+Xc = 0.958;  #GPa
+Yt = 0.031; #GPa
+Yc = 0.118; #GPa
+S12 = 0.078;  #GPa
+
+##
+# Declarando as curvaturas em razão da cota Z:
+z_k0 = -0.0003; #N/m
+z_k1 = -0.0001; #N/m
+z_k2 = 0.0001; #N/m
+z_k3 = 0.0003; #N/m
+
+##
+# Os valores em milímetros (mm) foram convertidos para a unidade padrão metro(m).
+
+##
+# Os valores em Mega Pascal (MPa) foram convertidos para a unidade padrão Giga Pascal (GPa).
+
+##
+# Vamos declarar também os nossos dados de carregamento
+
+#Carregamento
+Nx = 200000;   #N/m
+Ny = 100000;   #N/m
+Nxy = 0;       #m/m
+
+##
+# A unidade padrão é Newton por Metro (N/m), sendo:
+#
+# $Nx$ a Força normal na direção X;
+#
+# $Ny$ a Força normal na direção Y.
+
+##
+# Cálculo do coeficiente de Poisson Menor (v21)
+
+#Calculo o coeficiente de Poisson Menor (v21)
+v21 = v12*E2/E1;
+
+##
+# Iremos Calcular as matrizes [Q] e [S] da lâmina considerando as fibras
+# alinhadas ao eixo longitudinal da lâmina (teta = 0, x=1)
+
+#Calculo dos elementos da matriz rigidez de laminas ortotropicas - (GPa)
+Q11 = (E1/(1-(v12*v21)));
+Q12 = (v21*E1)/(1-(v21*v12));
+Q21 = (v12*E2)/(1-(v12*v21));
+Q22 = (E2)/(1-(v21*v12));
+Q66 = G12;
+
+##
+# Cálculo dos elementos da matriz de flexibilidade de lâminas ortotropicas - (GPa)^-1:
+S11 = (1/E1);
+S12 = (-v21)/(E2);
+S21 = (-v12)/(E1);
+S22 = (1)/(E2);
+S66 = (1)/(G12);
+
+##
+# Matriz de Rigidez de lâminas Ortotropicas em EPT - (GPa):
+Q = [Q11, Q12, 0; Q21, Q22, 0; 0, 0, Q66];
+
+##
+# Matriz de Flexibilidade de lâminas Ortotropicas em EPT - (GPa)^-1:
+#
+# Lembrar que a matriz [S] também pode ser calculada por "S = INV(Q)"
+S = [S11, S12, 0; S21, S22, 0; 0, 0, S66];
+
+##
+# Calculando as matrizes de Rigidez [Q_barra] e Flexibilidade [S_barra] considerando qua as
+# fibras ao longo da direçao 1 estão orientadas a +45º em relaçao a direçao x:
+#
+# Calculo dos elementos da matriz de Rotaçao (T) p/ camada de 45º:
+teta_1 = 45;
+T11_45 = cosd(teta_1)^2;
+T12_45 = sind(teta_1)^2;
+T16_45 = 2*cosd(teta_1)*sind(teta_1);
+T21_45 = sind(teta_1)^2;
+T22_45 = cosd(teta_1)^2;
+T26_45 = -2*cosd(teta_1)*sind(teta_1);
+T61_45 = -cosd(teta_1)*sind(teta_1);
+T62_45 = cosd(teta_1)*sind(teta_1);
+T66_45 = (cosd(teta_1)^2) - (sind(teta_1)^2);
+
+##
+# Cálculo dos elementos da matriz de Rotaçao (T) p/ camada de 0º:
+teta_2 = 0;
+T11_0 = cosd(teta_2)^2;
+T12_0 = sind(teta_2)^2;
+T16_0 = 2*cosd(teta_2)*sind(teta_2);
+T21_0 = sind(teta_2)^2;
+T22_0 = cosd(teta_2)^2;
+T26_0 = -2*cosd(teta_2)*sind(teta_2);
+T61_0 = -cosd(teta_2)*sind(teta_2);
+T62_0 = cosd(teta_2)*sind(teta_2);
+T66_0 = (cosd(teta_2)^2) - (sind(teta_2)^2);
+
+##
+# Cálculo dos elementos da matriz de Rotaçao (T) p/ camada de 90º:
+teta_3 = 90;
+T11_90 = cosd(teta_3)^2;
+T12_90 = sind(teta_3)^2;
+T16_90 = 2*cosd(teta_3)*sind(teta_3);
+T21_90 = sind(teta_3)^2;
+T22_90 = cosd(teta_3)^2;
+T26_90 = -2*cosd(teta_3)*sind(teta_3);
+T61_90 = -cosd(teta_3)*sind(teta_3);
+T62_90 = cosd(teta_3)*sind(teta_3);
+T66_90 = (cosd(teta_3)^2) - (sind(teta_3)^2);
+
+##
+# Matriz de Rotação [T] para o ângulo de 45º:
+T_45 = [T11_45, T12_45, T16_45; T21_45, T22_45, T26_45; T61_45, T62_45, T66_45];
+
+##
+# Matriz de Rotação [T] para o ângulo de 0º:
+T_0 = [T11_0, T12_0, T16_0; T21_0, T22_0, T26_0; T61_0, T62_0, T66_0];
+
+##
+# Matriz de Rotação [T] para o ângulo de 90º:
+T_90 = [T11_90, T12_90, T16_90; T21_90, T22_90, T26_90; T61_90, T62_90, T66_90];
+
+##
+# Inversa da Matriz de Rotação [T] para o ângulo de 45º:
+T_45_i = inv(T_45);
+
+##
+# Inversa da Matriz de Rotação [T] para o ângulo de 0º:
+T_0_i = inv(T_0);
+
+##
+# Inversa da Matriz de Rotação [T] para o ãngulo de 90º:
+T_90_i = inv(T_90);
+
+##
+# Transposta da Matriz de Rotação [T] para o ângulo de 45º:
+T_45_t = T_45';
+
+##
+# Transposta da Matriz de Rotação [T] para o ângulo de 0º:
+T_0_t = T_0';
+
+##
+# Transposta da Matriz de Rotação [T] para o ângulo de 90º:
+T_90_t = T_90';
+
+##
+# Inversa da Matriz Transposta da Matriz de Rotação [T] para o ângulo de 45º:
+T_45_i_t = inv(T_45_t);
+
+##
+# Inversa da Matriz Transposta da Matriz de Rotação [T] para o ângulo de 0º:
+T_0_i_t = inv(T_0_t);
+
+##
+# Inversa da Matriz Transposta da Matriz de Rotaçao [T] para o ângulo de 90º:
+T_90_i_t = inv(T_90_t);
+
+##
+# Cálculo da Matriz de Rigidez de uma lâmina Ortotropica angular 45º [Q_barra] - (GPa):
+Q_barra_45 = T_45_i*Q*T_45_i_t;
+
+##
+# Cálculo da Matriz de Rigidez de uma lâmina Ortotropica angular 0º [Q_barra] - (GPa):
+Q_barra_0 = T_0_i*Q*T_0_i_t;
+
+##
+# Cálculo da Matriz de Rigidez de uma lâmina Ortotropica angular 90º [Q_barra] - (GPa):
+Q_barra_90 = T_90_i*Q*T_90_i_t;
+
+##
+# Cálculo da Matriz de Flexibilidade de uma lâmina Ortotropica angular 45º [S_barra] - (GPa)^-1:
+S_barra_45 = T_45_t*S*T_45;
+
+##
+# Cálculo da Matriz de Flexibilidade de uma lâmina Ortotropica angular 0º [S_barra] - (GPa)^-1:
+S_barra_0 = T_0_t*S*T_0;
+
+##
+# Cálculo da Matriz de Flexibilidade de uma lâmina Ortotropica angular 90º [S_barra] - (GPa)^-1:
+S_barra_90 = T_90_t*S*T_90;
+
+##
+# Elementos da Matriz de Rigidez Extensional no Plano:
+A1 = Q_barra_45*(z_k1 - z_k0);
+A2 = Q_barra_0*(z_k2 - z_k1);
+A3 = Q_barra_90*(z_k3 - z_k2);
+
+##
+# Matriz de Rigidez Extensional no Plano, unidade de medida é newton/metro:
+A = (A1+A2+A3)*10^9;
+
+##
+# Elementos da Matriz de Acoplamento Extensão-Deformação:
+B1 = Q_barra_45*(z_k1^2 - z_k0^2);
+B2 = Q_barra_0*(z_k2^2 - z_k1^2);
+B3 = Q_barra_90*(z_k3^2 - z_k2^2);
+
+##
+# Matriz de Acoplamento Extensão-Deformação:
+B = 0.5*(B1+B2+B3)*10^9;
+
+##
+# Elementos da Matriz de Rigidez à Flexão e Torsão:
+D1 = Q_barra_45*(z_k1^3 - z_k0^3);
+D2 = Q_barra_0*(z_k2^3 - z_k1^3);
+D3 = Q_barra_90*(z_k3^3 - z_k2^3);
+
+##
+# Matriz de Rigidez à Flexão e Torsão:
+D = (1/3)*(D1+D2+D3)*10^9;
+
+##
+# Cálculo da Matriz [ABBD]:
+ABBD = [A, B; B, D];
+
+##
+# Cálculo da matriz [abcd]
+#
+# Inversão parcial da matriz [ABBD]
+A_ast = inv(A);
+B_ast = -inv(A)*B;
+C_ast = -B_ast';
+D_ast = D+B*B_ast;
+
+##
+# Inversão total da matriz [ABBD]
+a = A_ast+B_ast*inv(D_ast)*B_ast';
+b = B_ast*inv(D_ast);
+c = b';
+d = inv(D_ast);
+
+##
+# Cálculo das deform ações normais no plano médio (m/m):
+e_zero = a*[Nx; Ny; Nxy];
+
+##
+# Cálculo das curvaturas (1/m)
+K = c*[Nx; Ny; Nxy];
+
+##
+# Cálculo das deformações globais no ponto médio da camada 1 (m/m):
+z_m_k1 = -0.0002; # (m/m)
+e_x_k1 = e_zero + z_m_k1*K;
+
+##
+# Cálculo das deformações globais no ponto médio da camada 2 (m/m):
+z_m_k2 = 0; # (m/m)
+e_x_k2 = e_zero + z_m_k2*K;
+
+##
+# Cálculo das deformações globais no ponto médio da camada 2 (m/m):
+z_m_k3 = 0.0002; # (m/m)
+e_x_k3 = e_zero + z_m_k3*K;
+
+##
+# Calculo das deformações locais no ponto médio da camada k = 1
+e_1 = T_45_i_t*e_x_k1;
+
+##
+# Cálculo das deformações locais no ponto médio da camada k = 2
+e_2 = T_0_i_t*e_x_k2;
+
+##
+# Cálculo das deformações locais no ponto médio da camada k = 3
+e_3 = T_90_i_t*e_x_k3;
+
+##
+# Cálculo das tensões globais no ponto médio da camada k = 1 (GPa)
+T_x_1 = Q_barra_45*e_zero +Q_barra_45*z_m_k1*K;
+
+##
+# Cálculo das tensões globais no ponto médio da camada k = 2 (GPa)
+T_x_2 = Q_barra_0*e_zero +Q_barra_0*z_m_k2*K;
+
+##
+# Cálculo das tensões globais no ponto médio da camada k = 3 (GPa)
+T_x_3 = Q_barra_90*e_zero +Q_barra_90*z_m_k3*K;
+
+##
+# Cálculo das tensões locais no ponto médio da camada k = 1 (GPa)
+T_1_k1 = T_45*T_x_1;
+
+##
+# Cálculo das tensões locais no ponto médio da camada k = 2 (GPa)
+T_1_k2 = T_0*T_x_2;
+
+##
+# Cálculo das tensões locais no ponto médio da camada k = 3 (GPa)
+T_1_k3 = T_90*T_x_3;
+
+## Critério de falha em compósitos:
+#
+% * Critério de tensão máxima
+#
+# Para a lamina 45º k1
+
+if (T_1_k1(1,1) < Xt)
+       printf ("Lâmina de 45º na direção 1 não falha.")
+     else
+       printf ("Lâmina de 45º na direção 1 falha.")
+     endif
+##
+# Para a lamina 45º k1
+
+if (T_1_k1(2 ,1) < Yt)
+       printf ("Lâmina de 45º na direção 2 não falha.")
+     else
+       printf ("Lâmina de 45º na direção 2 falha.")
+     endif
+##
+# Para a lamina 45º k1
+
+if (abs (T_1_k1(3,1)) < abs(S12))
+       printf ("Lâmina de 45º na direção 12 não falha.")
+     else
+       printf ("Lâmina de 45º na direção 12 falha.")
+     endif
+##
+# Para a lamina 0º k2
+
+if (T_1_k2(1,1) < Xt)
+       printf ("Lâmina de 0º na direção 1 não falha.")
+     else
+       printf ("Lâmina de 0º na direção 1 falha.")
+     endif
+##
+# Para a lamina 0º k2
+
+if (T_1_k2(2 ,1) < Yt)
+       printf ("Lâmina de 0º na direção 2 não falha.")
+     else
+       printf ("Lâmina de 0º na direção 2 falha.")
+     endif
+##
+# Para a lamina 0º k2
+
+if (abs (T_1_k2(3,1)) < abs(S12))
+       printf ("Lâmina de 0º na direção 12 não falha.")
+     else
+       printf ("Lâmina de 0º na direção 12 falha.")
+     endif
+##
+# Para a lamina 90º k3
+
+if (T_1_k3(1,1) < Xt)
+       printf ("Lâmina de 90º na direção 1 não falha.")
+     else
+       printf ("Lâmina de 90º na direção 1 falha.")
+     endif
+##
+# Para a lamina 90º k3
+
+if (T_1_k3(2 ,1) < Yt)
+       printf ("Lâmina de 90º na direção 2 não falha.")
+     else
+       printf ("Lâmina de 90º na direção 2 falha.")
+     endif
+##
+# Para a lamina 90º k3
+
+if (abs (T_1_k3(3,1)) < abs(S12))
+       printf ("Lâmina de 90º na direção 12 não falha.")
+     else
+       printf ("Lâmina de 90º na direção 12 falha.")
+     endif
+##
+% * Critério de AZZI-TSAI-HILL (máximo trabalho).
+
+if ((T_1_k1(1,1)/Xt)^2 - T_1_k1(1,1)*T_1_k1(2,1)/Xt^2 + (T_1_k1(2,1)/Yt^2) + (T_1_k1(3,1)/S12)^2 < 1)
+         printf ("Compósito não falha.")
+     else
+       printf ("Compósito falha.")
+     endif
+
+
+## Referências Bibliográficas
+% # MARINUCCI, Gerson. Materiais compósitos poliméricos: fundamentos e tecnologia.
+# São Paulo: Artliber, v. 1, 2011.
+% # John W. Eaton, David Bateman, Soren Hauberg, Rik Wehbring (2022).
+# GNU Octave version 7.1.0 manual: a high-level interactive language for
+# numerical computations.
+# URL https://www.gnu.org/software/octave/doc/v7.1.0/
+
+## Publicando este arquivo em página web (html).
+publish ("exercicio.m");
+grabcode ("html/exercicio.html");
+##### SOURCE END #####
+-->
+</body>
+</html>
